@@ -1,0 +1,179 @@
+<script setup lang="ts">
+import { ref, watch } from 'vue';
+import Control from './components/Control.vue';
+import { useSlideshow } from './composables/useSlideshow';
+
+const {
+  images,
+  currentImageIndex,
+  currentImage,
+  intervalSec,
+  restSec,
+  secondsLeft,
+  isPlaying,
+  isResting,
+  isSessionFinished,
+  isReady,
+  loadImages,
+  toggleSlideshow,
+  endSession,
+} = useSlideshow();
+
+const isControlsVisible = ref(true);
+
+// controlsの表示切り替え（手動トグルボタン用）
+const toggleControlsPanel = () => {
+  // isPlaying 中は手動トグルは効かないようにする
+  isControlsVisible.value = !isControlsVisible.value;
+}
+
+watch(isPlaying, (newIsPlaying) => {
+  isControlsVisible.value = !newIsPlaying;
+}, { immediate: true });
+
+
+
+</script>
+
+<template>
+  <div class="croquis-app">
+    <Control :is-controls-visible="isControlsVisible" v-model:interval-sec="intervalSec" v-model:rest-sec="restSec"
+      :is-playing="isPlaying" :is-ready="isReady" :is-session-finished="isSessionFinished"
+      @toggle-play="toggleSlideshow" @end-session="endSession" @files-selected="loadImages"
+      @toggle-visibility="toggleControlsPanel"></Control>
+
+    <!-- 画像表示エリア -->
+    <div class="image-display-area">
+      <div v-if="isSessionFinished" class="placeholder">
+        <p class="session-complete-message">セッション完了！</p>
+      </div>
+      <div v-else-if="isResting" class="placeholder rest-message">
+        <p class="rest-message-text">休憩中</p>
+        <p class="rest-timer-display">{{ secondsLeft }} 秒</p>
+      </div>
+      <div v-else-if="currentImage" class="image-container">
+        <img :src="currentImage" alt="クロッキー画像" class="current-image" />
+        <div class="overlay timer-overlay">{{ secondsLeft }} 秒</div>
+        <div class="overlay index-overlay">{{ currentImageIndex + 1 }} / {{ images.length }}</div>
+      </div>
+      <div v-else class="placeholder">
+        <p>画像をアップロードしてね！</p>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.croquis-app {
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f8f8f8;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  min-height: 500px;
+  height: 100%;
+}
+
+h1 {
+  color: #34495e;
+  margin-bottom: 30px;
+  font-size: 2.2em;
+}
+
+
+.image-display-area {
+  width: 100%;
+  height: 100%;
+  background-color: #ddd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.placeholder {
+  color: #666;
+  font-size: 1.5em;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.placeholder p {
+  margin: 0;
+  padding: 0;
+}
+
+.session-complete-message {
+  color: #007bff;
+  font-size: 2em;
+  font-weight: bold;
+}
+
+.rest-message {
+  background-color: #ffccbc;
+  color: #d32f2f;
+  font-size: 1.8em;
+  font-weight: bold;
+}
+
+.rest-message-text {
+  font-size: 1.2em;
+}
+
+.rest-timer-display {
+  font-size: 2.5em;
+  font-weight: bold;
+  margin-top: 10px;
+  color: #d32f2f;
+}
+
+.image-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.current-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.overlay {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 8px 15px;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.timer-overlay {
+  top: 15px;
+  right: 15px;
+}
+
+.index-overlay {
+  top: 15px;
+  left: 15px;
+}
+</style>
