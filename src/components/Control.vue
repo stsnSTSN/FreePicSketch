@@ -29,6 +29,7 @@
             <button @click="emit('end-session')" :disabled="!isReady" class="end-session-button">
                 セッション終了
             </button>
+            <button class="btn-history" @click="emit('toggle-history')">履歴</button>
         </div>
     </div>
 </template>
@@ -50,6 +51,7 @@ const emit = defineEmits<{
     (e: 'end-session'): void;
     (e: 'files-selected', files: FileList | null): void;
     (e: 'toggle-visibility'): void;
+    (e: 'toggle-history'): void;
 }>();
 
 const onFileSelected = (event: Event) => {
