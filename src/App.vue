@@ -255,6 +255,7 @@ h1 {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   position: absolute;
   max-width: 850px;
+  z-index: 1001;
 }
 
 .modal-header {

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>アプリケーション構造図</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <main>
+      <h1>アプリケーション構造図</h1>
+      <p>
+        この図は、現在のアプリケーションの主要な部品（コンポーネントとコンポーザブル）が、どのように連携して動作しているかを示しています。
+      </p>
+
+      <section>
+        <h2>登場人物</h2>
+        <ul>
+          <li>
+            <strong><code>App.vue</code> (司令塔 / 親コンポーネント)</strong>:
+            アプリケーション全体のレイアウトを管理します。`useSlideshow` からロジックを、`Control`
+            からUIを受け取り、両者を繋ぎ合わせる役割を持ちます。
+          </li>
+          <li>
+            <strong><code>Control.vue</code> (操作パネル / 子コンポーネント)</strong>:
+            ボタンや入力欄などのUI部品です。自分では状態を持たず、親から渡されたデータを表示し、ユーザーの操作を親に報告するだけの「ダム（Dumb）コンポーネント」です。
+          </li>
+          <li>
+            <strong><code>useSlideshow.ts</code> (頭脳 / Composable)</strong>:
+            スライドショーに関する全ての状態（データ）とロジック（関数）をカプセル化しています。UIには一切関与せず、再利用可能な「機能」の塊です。
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>関係図</h2>
+        <div class="diagram-container">
+          <div class="component app-vue">
+            <h3>App.vue (司令塔)</h3>
+          </div>
+
+          <div class="flow-group">
+            <div class="arrow-down logic-arrow">
+              <span class="label"
+                >State & Logic<br />(isPlaying, currentImage, toggleSlideshow)</span
+              >
+            </div>
+            <div class="arrow-down props-arrow">
+              <span class="label"
+                >Props (データ)<br />(is-playing, is-ready, interval-sec など)</span
+              >
+            </div>
+          </div>
+
+          <div class="bottom-row">
+            <div class="component composable">
+              <h3>useSlideshow.ts (頭脳)</h3>
+            </div>
+            <div class="component control-vue">
+              <h3>Control.vue (操作パネル)</h3>
+              <div class="arrow-up events-arrow">
+                <span class="label"
+                  >Events (ユーザー操作の報告)<br />(@toggle-play, @files-selected など)</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>データの流れ (One-Way Data Flow)</h2>
+        <ol>
+          <li>
+            <strong><code>useSlideshow.ts</code> (頭脳)</strong>
+            が、スライドショーの状態とそれを操作する関数をすべて定義します。
+          </li>
+          <li>
+            <strong><code>App.vue</code> (司令塔)</strong> が、<code>useSlideshow</code>
+            を呼び出して、状態と関数を受け取ります。
+          </li>
+          <li>
+            <strong><code>App.vue</code> (司令塔)</strong> は、受け取った状態を
+            <strong>Props</strong> として子である
+            <strong><code>Control.vue</code> (操作パネル)</strong> に渡します。<br />例:
+            <code>:is-playing="isPlaying"</code>
+          </li>
+          <li>
+            <strong><code>Control.vue</code> (操作パネル)</strong>
+            は、ユーザーがボタンを押したりすると、<strong>Emit</strong>
+            を使って親に「こんな操作がありました」と
+            <strong>Events</strong> として報告します。<br />例:
+            <code>@click="emit('toggle-play')"</code>
+          </li>
+          <li>
+            報告を受け取った <strong><code>App.vue</code> (司令塔)</strong> は、対応する関数（<code
+              >useSlideshow</code
+            >
+            から受け取ったもの）を呼び出して、状態を更新します。<br />例:
+            <code>@toggle-play="toggleSlideshow"</code>
+          </li>
+          <li>
+            状態が更新されると、Vueのリアクティビティシステムにより、その状態をPropsとして受け取っている
+            <code>Control.vue</code> の表示も自動的に更新されます。
+          </li>
+        </ol>
+        <p>
+          この一方向のデータの流れにより、コードが整理され、どこで何が起きているかが非常に分かりやすくなっています。
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

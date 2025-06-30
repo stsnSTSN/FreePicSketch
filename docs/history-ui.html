@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>履歴機能 UI提案</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        background-color: #e9ecef;
+        color: #333;
+        padding: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      h1,
+      h2 {
+        color: #0056b3;
+      }
+      .wireframe {
+        border: 2px dashed #ccc;
+        padding: 20px;
+        margin-top: 20px;
+        border-radius: 5px;
+        background: #f8f9fa;
+      }
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000; /* 他の要素より手前に表示 */
+        
+        /* アニメーション用の設定 */
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+      }
+
+      .modal-overlay.is-active {
+        visibility: visible;
+        opacity: 1;
+      }
+
+      .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 600px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        /* margin: auto; は不要になる */
+
+        /* アニメーション用の設定 */
+        transform: translateY(-20px);
+        transition: transform 0.3s ease;
+      }
+
+      .modal-overlay.is-active .modal-content {
+        transform: translateY(0);
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+      }
+      .modal-header h3 {
+        margin: 0;
+      }
+      .modal-header .close-button {
+        font-size: 1.5rem;
+        cursor: pointer;
+        border: none;
+        background: none;
+      }
+      .modal-body {
+        padding: 20px 0;
+      }
+      .history-list {
+        list-style: none;
+        padding: 0;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .history-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border: 1px solid #e0e0e0;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        background: #fff;
+      }
+      .history-item .info {
+        flex-grow: 1;
+      }
+      .history-item .info .name {
+        font-weight: bold;
+        cursor: pointer;
+        text-decoration: underline dashed 1px #aaa;
+        text-decoration-skip-ink: none;
+        display: inline-block;
+      }
+      .history-item .info .name:hover {
+        background-color: #f0f0f0;
+      }
+      .history-item .info .details {
+        font-size: 0.9em;
+        color: #666;
+      }
+      .history-item .info .timestamp {
+        font-size: 0.8em;
+        color: #888;
+        margin-top: 4px;
+      }
+      .history-item.editing .info .name,
+      .history-item.editing .actions {
+        display: none;
+      }
+      .edit-name {
+        display: none;
+      }
+      .history-item.editing .edit-name {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+      .edit-name input {
+        flex-grow: 1;
+        padding: 8px;
+        border: 1px solid #007bff;
+        border-radius: 4px;
+      }
+      .edit-actions {
+        display: flex;
+        gap: 5px;
+      }
+      .history-item .actions button {
+        margin-left: 10px;
+      }
+      button {
+        padding: 8px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .btn-sm {
+        padding: 5px 10px;
+        font-size: 0.9em;
+      }
+      .btn-primary {
+        background-color: #007bff;
+        color: white;
+      }
+      .btn-danger {
+        background-color: #dc3545;
+        color: white;
+      }
+      .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+      }
+      .modal-footer {
+        border-top: 1px solid #dee2e6;
+        padding-top: 10px;
+        text-align: right;
+      }
+      .control-panel-mock {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        background-color: #e9f5ff;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #c0d9eb;
+      }
+      .btn-history-mock {
+        background-color: #90a4ae;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>履歴機能 UI提案 (改訂版)</h1>
+      <p>セッション完了時に自動で履歴が追加され、後から名称を編集できる形式のUIです。</p>
+
+      <div class="wireframe">
+        <h2>ボタン配置の提案</h2>
+        <p>
+          再生/停止ボタンなどが並んでいる操作パネル（コントロールパネル）の右端に、「履歴」ボタンを追加するのが最も自然で分かりやすいです。
+        </p>
+        <div class="control-panel-mock">
+          <button class="btn-primary">▶ 開始</button>
+          <button class="btn-danger">■ 終了</button>
+          <button class="btn-history-mock" id="open-modal-btn">履歴</button>
+        </div>
+      </div>
+
+      <div class="wireframe">
+        <h2>ワイヤーフレーム</h2>
+        <div class="modal-overlay" id="modal-overlay">
+          <div class="modal-content" id="modal-content">
+            <div class="modal-header">
+              <h3>セッション履歴</h3>
+              <button class="close-button" title="閉じる">&times;</button>
+            </div>
+            <div class="modal-body">
+              <ul class="history-list">
+                <!-- 通常表示のアイテム -->
+                <li class="history-item">
+                  <div class="info">
+                    <div class="name" title="クリックして編集">人物クロッキーセット1</div>
+                    <div class="details">15枚 / 60秒 / 休憩10秒</div>
+                    <div class="timestamp">保存日時: 2024/05/17 14:20:35</div>
+                  </div>
+                  <div class="actions">
+                    <button class="btn-secondary">適用</button>
+                    <button class="btn-danger">削除</button>
+                  </div>
+                </li>
+                <!-- 名称を編集中 のアイテム -->
+                <li class="history-item editing">
+                  <div class="info">
+                    <!-- 表示モード用の名前 (編集中は非表示) -->
+                    <div class="name" title="クリックして編集">風景スケッチ（短時間）</div>
+                    <!-- 編集モード用の入力欄 (編集中に表示) -->
+                    <div class="edit-name">
+                      <input type="text" value="風景スケッチ（短時間）" />
+                      <div class="edit-actions">
+                        <button class="btn-primary btn-sm">保存</button>
+                        <button class="btn-secondary btn-sm">キャンセル</button>
+                      </div>
+                    </div>
+                    <div class="details">32枚 / 10秒 / 休憩0秒</div>
+                    <div class="timestamp">保存日時: 2024/05/16 09:15:10</div>
+                  </div>
+                  <!-- 編集中は適用/削除ボタンを非表示にする -->
+                  <div class="actions"></div>
+                </li>
+                <li class="history-item">
+                  <div class="info">
+                    <div class="name" title="クリックして編集">セッション 2024/05/15 21:45</div>
+                    <div class="details">8枚 / 120秒 / 休憩30秒</div>
+                    <div class="timestamp">保存日時: 2024/05/15 21:45:02</div>
+                  </div>
+                  <div class="actions">
+                    <button class="btn-secondary">適用</button>
+                    <button class="btn-danger">削除</button>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="modal-footer">
+              <button class="btn-secondary close-button">閉じる</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalContent = document.getElementById('modal-content');
+        const openModalBtn = document.getElementById('open-modal-btn');
+        const closeButtons = document.querySelectorAll('.close-button');
+
+        // モーダルを開く
+        const openModal = () => {
+          modalOverlay.classList.add('is-active');
+        };
+
+        // モーダルを閉じる
+        const closeModal = () => {
+          modalOverlay.classList.remove('is-active');
+        };
+
+        // 開くボタンのイベントリスナー
+        openModalBtn.addEventListener('click', openModal);
+
+        // 閉じるボタンのイベントリスナー
+        closeButtons.forEach(button => {
+          button.addEventListener('click', closeModal);
+        });
+
+        // オーバーレイのクリックでモーダルを閉じる
+        modalOverlay.addEventListener('click', (event) => {
+          // event.targetがモーダル自体(.modal-content)やその子要素でない場合のみ閉じる
+          if (!modalContent.contains(event.target)) {
+            closeModal();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
+
+``` ### UIのポイント * **直感的な操作**:
+履歴のリストを見て、「適用」ボタンを押せばその設定が読み込まれ、「削除」ボタンで消せる、という分かりやすさを目指した。
+* **新規保存**:
+モーダルの上部に現在の設定を保存するエリアを設けることで、「履歴の管理」という役割がこのウィンドウで完結する。
+* **邪魔にならない**: 普段は「履歴」ボタン一つだけなので、既存のUIを大きく崩すことがない。 ###
+実装方針 このUIを実現するためには、以下のようなコンポーネントとロジックを追加するのが良いだろう。 1.
+**`useHistory.ts` (新しいComposable)**: *
+`localStorage`を使って、履歴データの読み書きや削除を行うロジックをここにまとめる。 * `getHistories`,
+`saveHistory`, `deleteHistory` のような関数を定義する。 2. **`HistoryModal.vue`
+(新しいコンポーネント)**: * 上記のワイヤーフレームで示したモーダルウィンドウのUI部品。 *
+親コンポーネントから表示/非表示を制御され、ユーザー操作（適用、削除、保存など）を親に`emit`で通知する。
+3. **`Control.vue` と `App.vue` の修正**: *
+`Control.vue`に「履歴」ボタンを追加し、クリックされたら`App.vue`に`'open-history-modal'`のようなイベントを通知する。
+* `App.vue`がそのイベントを受け取って、`HistoryModal.vue`の表示をONにする。 *
+`App.vue`は`useHistory`と`useSlideshow`の両方を知っているので、履歴の適用（`useHistory`から設定を読み込み、`useSlideshow`に渡す）といった連携処理を担当する。
+この方針で進めれば、綺麗に役割分担されたまま新機能を追加できるはずだよ。
+まずはこのUIの方向性で問題ないか、確認してみてね！
+
+<!--
+[PROMPT_SUGGESTION]このUIを実装するための`HistoryModal.vue`の雛形コードを書いて。[/PROMPT_SUGGESTION]
+[PROMPT_SUGGESTION]localStorageに画像データを保存する際の注意点を教えて。[/PROMPT_SUGGESTION]
+-->
