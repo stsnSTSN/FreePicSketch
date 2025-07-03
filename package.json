@@ -1,5 +1,6 @@
 {
   "name": "croquis-app",
+  "type": "module",
   "version": "1.0.0",
   "description": "A quick posing tool for croquis.",
   "main": "electron/main.js",
@@ -13,8 +14,10 @@
     "electron:build": "npm run build && electron-builder"
   },
   "devDependencies": {
+    "@tsconfig/node22": "^22.0.2",
     "@types/node": "^20.14.9",
     "@vitejs/plugin-vue": "^5.0.4",
+    "@vue/tsconfig": "^0.7.0",
     "electron": "^30.0.8",
     "electron-builder": "^24.13.3",
     "typescript": "^5.2.2",
@@ -22,7 +25,10 @@
     "vue-tsc": "^2.0.6"
   },
   "dependencies": {
-    "vue": "^3.4.21"
+    "electron-store": "^10.1.0",
+    "pinia": "^3.0.3",
+    "vue": "^3.4.21",
+    "vue-router": "^4.5.1"
   },
   "build": {
     "appId": "com.yourcompany.croquisapp",

@@ -1,5 +1,5 @@
 {
-  "files": [],
+  "files": ["src/preload.d.ts"],
   "references": [
     {
       "path": "./tsconfig.node.json"

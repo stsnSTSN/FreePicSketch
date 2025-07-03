@@ -1,143 +1,123 @@
-import { ref, computed, onUnmounted, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
+import type { SessionHistory } from '../types/history';
 
 export function useSlideshow() {
-  // --- 状態 ---
-  const images = ref<string[]>([]);
+  // NOTE: blob URL(string)ではなく、Fileオブジェクトを直接保持するように変更
+  // これにより、Electron環境でfile.pathプロパティにアクセスできる
+  const images = ref<File[]>([]);
   const currentImageIndex = ref(0);
-  const intervalSec = ref(5);
-  const restSec = ref(0);
+
+  const intervalSec = ref(60);
+  const restSec = ref(10);
   const secondsLeft = ref(0);
+
   const isPlaying = ref(false);
   const isResting = ref(false);
   const isSessionFinished = ref(false);
-  const timerId = ref<number | null>(null);
 
-  // --- 算出プロパティ ---
+  let timerId: number | null = null;
+
+  const isReady = computed(() => images.value.length > 0);
+
+  // NOTE: Fileオブジェクトから動的にblob URLを生成するよう変更
   const currentImage = computed(() => {
-    if (isResting.value || !images.value[currentImageIndex.value]) {
+    if (!isReady.value || currentImageIndex.value >= images.value.length) {
       return null;
     }
-    return images.value[currentImageIndex.value];
+    // 古いURLを解放し、新しいURLを生成
+    const currentFile = images.value[currentImageIndex.value];
+    return URL.createObjectURL(currentFile);
   });
 
-  const isReady = computed(() => images.value.length > 0 && !isSessionFinished.value);
-
-  // --- メソッド ---
-
-  const reset = () => {
-    if (timerId.value) clearInterval(timerId.value);
-    timerId.value = null;
-    images.value = [];
+  const loadImages = (files: FileList) => {
+    images.value = Array.from(files);
     currentImageIndex.value = 0;
-    isPlaying.value = false;
-    isResting.value = false;
     isSessionFinished.value = false;
-    secondsLeft.value = 0;
   };
 
-  /**
-   * 画像ファイルを読み込み、データURLとして状態を更新する
-   * @param files ファイル入力からのFileListオブジェクト
-   */
-  const loadImages = (files: FileList | null) => {
-    reset(); // 新しい画像を読み込む際は、常に状態をリセットする
-    if (!files || files.length === 0) return;
-
-    const filePromises = Array.from(files).map((file) => {
-      return new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) =>
-          e.target?.result
-            ? resolve(e.target.result as string)
-            : reject(new Error('File read error'));
-        reader.onerror = (error) => reject(error);
-        reader.readAsDataURL(file);
-      });
-    });
-
-    Promise.all(filePromises)
-      .then((results) => {
-        images.value = results;
-        secondsLeft.value = intervalSec.value; // 最初の画像のタイマーを準備
-      })
-      .catch((error) => {
-        console.error('Error loading images:', error);
-        alert('画像の読み込みに失敗しました。');
-        reset(); // エラー発生後、状態をクリーンにする
-      });
-  };
-
-  const tick = () => {
-    secondsLeft.value--;
-    if (secondsLeft.value > 0) return;
-
-    if (isResting.value) {
-      isResting.value = false;
+  const next = () => {
+    if (currentImageIndex.value < images.value.length - 1) {
       currentImageIndex.value++;
-      if (currentImageIndex.value >= images.value.length) {
-        endSession();
-        return;
-      }
-      secondsLeft.value = intervalSec.value;
+      startTimer(intervalSec.value, nextWithRest);
     } else {
-      if (restSec.value > 0 && currentImageIndex.value < images.value.length - 1) {
-        isResting.value = true;
-        secondsLeft.value = restSec.value;
-      } else {
-        currentImageIndex.value++;
-        if (currentImageIndex.value >= images.value.length) {
-          endSession();
-          return;
-        }
-        secondsLeft.value = intervalSec.value;
-      }
+      endSession();
     }
   };
 
-  const pauseSlideshow = () => {
-    isPlaying.value = false;
-    if (timerId.value) clearInterval(timerId.value);
-    timerId.value = null;
+  const nextWithRest = () => {
+    if (restSec.value > 0 && currentImageIndex.value < images.value.length - 1) {
+      isResting.value = true;
+      startTimer(restSec.value, () => {
+        isResting.value = false;
+        next();
+      });
+    } else {
+      next();
+    }
   };
 
-  const startSlideshow = () => {
-    if (!isReady.value) return;
-    isPlaying.value = true;
-    if (secondsLeft.value === 0) secondsLeft.value = intervalSec.value;
-    if (timerId.value) clearInterval(timerId.value);
-    timerId.value = window.setInterval(tick, 1000);
+  const startTimer = (duration: number, onComplete: () => void) => {
+    if (timerId) clearInterval(timerId);
+    secondsLeft.value = duration;
+    timerId = window.setInterval(() => {
+      secondsLeft.value--;
+      if (secondsLeft.value <= 0) {
+        if (timerId) clearInterval(timerId);
+        onComplete();
+      }
+    }, 1000);
   };
 
   const toggleSlideshow = () => {
-    isPlaying.value ? pauseSlideshow() : startSlideshow();
+    isPlaying.value = !isPlaying.value;
   };
 
-  const endSession = () => {
-    pauseSlideshow();
+  const endSession = async () => {
+    if (timerId) clearInterval(timerId);
+    isPlaying.value = false;
     isSessionFinished.value = true;
+
+    // NOTE: ここからが履歴保存のコアロジック
+    const newHistory: SessionHistory = {
+      id: crypto.randomUUID(),
+      name: `セッション ${new Date().toLocaleString()}`,
+      imageCount: images.value.length,
+      intervalSec: intervalSec.value,
+      restSec: restSec.value,
+      createdAt: new Date().toISOString(),
+      // Fileオブジェクトのpathプロパティを保存する
+      imagePaths: images.value.map((file) => (file as any).path),
+      thumbnails: [], // TODO: サムネイル機能は次のステップで
+    };
+
+    // メインプロセスに保存を依頼
+    if (window.electronAPI) {
+      await window.electronAPI.saveHistory(newHistory);
+    } else {
+      console.warn('electronAPI is not available. Running in a browser?');
+    }
   };
 
-  watch([intervalSec, restSec], () => {
-    if (isPlaying.value) {
-      pauseSlideshow();
-      startSlideshow();
+  watch(isPlaying, (playing) => {
+    if (playing) {
+      isSessionFinished.value = false;
+      currentImageIndex.value = 0;
+      startTimer(intervalSec.value, nextWithRest);
+    } else {
+      if (timerId) clearInterval(timerId);
     }
-  });
-
-  onUnmounted(() => {
-    if (timerId.value) clearInterval(timerId.value);
   });
 
   return {
     images,
     currentImageIndex,
+    currentImage,
     intervalSec,
     restSec,
     secondsLeft,
     isPlaying,
     isResting,
     isSessionFinished,
-    currentImage,
     isReady,
     loadImages,
     toggleSlideshow,

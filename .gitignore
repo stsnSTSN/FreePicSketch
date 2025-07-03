@@ -28,3 +28,6 @@ coverage
 *.sw?
 ./docs/*
 *.tsbuildinfo
+docs/gemini_order.txt
+.env
+drawing-app-vue.code-workspace

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
+import type { SessionHistory } from './types/history';
 import Control from './components/Control.vue';
 import HistoryModal from './components/HistoryModal.vue';
 import { useSlideshow } from './composables/useSlideshow';
@@ -22,12 +23,21 @@ const {
 
 const isControlsVisible = ref(true);
 const isHistoriesVisible = ref(false);
+const histories = ref<SessionHistory[]>([]);
+
+
+onMounted(async () => {
+  if (window.electronAPI) {
+    histories.value = await window.electronAPI.loadHistory();
+  }
+});
+
 // controlsの表示切り替え（手動トグルボタン用）
 const toggleControlsPanel = () => {
   isControlsVisible.value = !isControlsVisible.value;
 }
 
-const toggleHistorysPanel = () => {
+const toggleHistoriesPanel = () => {
   isHistoriesVisible.value = !isHistoriesVisible.value;
 }
 
@@ -35,7 +45,12 @@ watch(isPlaying, (newIsPlaying) => {
   isControlsVisible.value = !newIsPlaying;
 }, { immediate: true });
 
-
+watch(isSessionFinished, async (finished: boolean) => {
+  // セッションが終了した際に履歴一覧を更新する
+  if (finished && window.electronAPI) {
+    histories.value = await window.electronAPI.loadHistory();
+  }
+})
 
 </script>
 
@@ -43,13 +58,14 @@ watch(isPlaying, (newIsPlaying) => {
   <div class="croquis-app">
     <Control :is-controls-visible="isControlsVisible" v-model:interval-sec="intervalSec" v-model:rest-sec="restSec"
       :is-playing="isPlaying" :is-ready="isReady" :is-session-finished="isSessionFinished"
-      @toggle-play="toggleSlideshow" @end-session="endSession" @toggle-history="toggleHistorysPanel"
+      @toggle-play="toggleSlideshow" @end-session="endSession" @toggle-history="toggleHistoriesPanel"
       @files-selected="loadImages" @toggle-visibility="toggleControlsPanel"></Control>
 
     <!-- 画像表示エリア -->
     <div class="image-display-area">
       <!-- 履歴一覧 -->
-      <HistoryModal :is-histories-visible="isHistoriesVisible" @toggle-history="toggleHistorysPanel"></HistoryModal>
+      <HistoryModal :is-histories-visible="isHistoriesVisible" :histories="histories"
+        @toggle-history="toggleHistoriesPanel"></HistoryModal>
       <div v-if="isSessionFinished" class="placeholder">
         <p class="session-complete-message">セッション完了！</p>
       </div>

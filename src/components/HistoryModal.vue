@@ -9,14 +9,18 @@
             <div class="modal-body">
                 <ul class="history-list">
                     <!-- 通常表示のアイテム -->
-                    <li class="history-item">
+                    <li v-if="!histories || histories.length === 0" class="no-history">
+                        <p>まだセッション履歴がありません。レッツクロッキー！</p>
+                    </li>
+                    <li v-for="history in histories" :key="history.id" class="history-item">
                         <div class="info">
-                            <div class="name" title="クリックして編集">人物クロッキーセット1</div>
-                            <div class="details">15枚 / 60秒 / 休憩10秒</div>
-                            <div class="timestamp">実施日時: 2024/05/17 14:20:35</div>
+                            <div class="name" title="クリックして編集">{{ history.name }}</div>
+                            <div class="details">{{ history.imageCount }}枚 / {{ history.intervalSec }}秒 / 休憩{{
+                                history.restSec }}秒</div>
+                            <div class="timestamp">実施日時: {{ new Date(history.createdAt).toLocaleString() }}</div>
                             <div class="thumbs">
-                                <!-- 最大４個表示 -->
-                                <img src="../assets/img/thumb_prototype_01.jpg" alt="">
+                                <img v-for="(thumb, index) in history.thumbnails.slice(0.4)"
+                                    :key="`${history.id}-${index}`" :src="thumb">
                             </div>
                         </div>
                         <div class="actions">
@@ -24,6 +28,20 @@
                             <button class="btn-danger">削除</button>
                         </div>
                     </li>
+                    <!-- <li class="history-item">
+                        <div class="info">
+                            <div class="name" title="クリックして編集">人物クロッキーセット1</div>
+                            <div class="details">15枚 / 60秒 / 休憩10秒</div>
+                            <div class="timestamp">実施日時: 2024/05/17 14:20:35</div>
+                            <div class="thumbs">
+                                <img src="../assets/img/thumb_prototype_01.jpg" alt="">
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <button class="btn-secondary">適用</button>
+                            <button class="btn-danger">削除</button>
+                        </div>
+                    </li> -->
                     <!-- 名称を編集中 のアイテム -->
                     <li class="history-item editing">
                         <div class="info">
@@ -60,8 +78,10 @@
     </div>
 </template>
 <script setup lang="ts">
+import type { SessionHistory } from "../types/history";
 defineProps<{
     isHistoriesVisible: boolean;
+    histories: SessionHistory[];
 }>();
 
 const emit = defineEmits<{
@@ -244,5 +264,11 @@ button {
 
 .modal-overlay.is-active .modal-content {
     transform: translateY(0);
+}
+
+.no-history {
+    text-align: center;
+    color: #666;
+    padding: 20px;
 }
 </style>
