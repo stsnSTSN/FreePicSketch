@@ -10,8 +10,7 @@
     "electron/**/*.ts",
     "src/main/**/*.ts",
     "src/preload/**/*.ts",
-    "src/shared/**/*.ts",
-    "src/composables/*.ts"
+    "src/shared/**/*.ts"
   ],
   "compilerOptions": {
     "noEmit": true,

@@ -29,7 +29,8 @@ export function useSlideshow() {
     return URL.createObjectURL(currentFile);
   });
 
-  const loadImages = (files: FileList) => {
+  const loadImages = (files: FileList | null) => {
+    if (!files) return;
     images.value = Array.from(files);
     currentImageIndex.value = 0;
     isSessionFinished.value = false;
@@ -75,33 +76,16 @@ export function useSlideshow() {
   const endSession = async () => {
     if (timerId) clearInterval(timerId);
     isPlaying.value = false;
-    isSessionFinished.value = true;
-
-    // NOTE: ここからが履歴保存のコアロジック
-    const newHistory: SessionHistory = {
-      id: crypto.randomUUID(),
-      name: `セッション ${new Date().toLocaleString()}`,
-      imageCount: images.value.length,
-      intervalSec: intervalSec.value,
-      restSec: restSec.value,
-      createdAt: new Date().toISOString(),
-      // Fileオブジェクトのpathプロパティを保存する
-      imagePaths: images.value.map((file) => (file as any).path),
-      thumbnails: [], // TODO: サムネイル機能は次のステップで
-    };
-
-    // メインプロセスに保存を依頼
-    if (window.electronAPI) {
-      await window.electronAPI.saveHistory(newHistory);
-    } else {
-      console.warn('electronAPI is not available. Running in a browser?');
-    }
+    isSessionFinished.value = true; // 状態の変更のみ行う
+    console.log('useSlideshow.ts: Session ended. isSessionFinished set to true.');
   };
 
   watch(isPlaying, (playing) => {
     if (playing) {
+      if (isSessionFinished.value) {
+        currentImageIndex.value = 0;
+      }
       isSessionFinished.value = false;
-      currentImageIndex.value = 0;
       startTimer(intervalSec.value, nextWithRest);
     } else {
       if (timerId) clearInterval(timerId);

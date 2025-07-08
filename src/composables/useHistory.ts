@@ -1,113 +1,64 @@
 import { ref, readonly } from 'vue';
-import Store, { type Schema } from 'electron-store';
-
-// --- 型定義 ---
-// 履歴アイテムの型
-export interface HistoryItem {
-  id: string; // 一意のID (例: タイムスタンプやUUID)
-  name: string; // セッション名
-  images: string[]; // 画像データの配列 (DataURL)
-  intervalSec: number;
-  restSec: number;
-  createdAt: string; // 作成日時のISO文字列
-}
-
-// electron-storeで保存するデータのスキーマ定義
-interface StoreSchema {
-  histories: HistoryItem[];
-}
-
-// --- electron-storeの初期化 ---
-
-// スキーマとデフォルト値を定義
-const schema: Schema<StoreSchema> = {
-  histories: {
-    type: 'array',
-    default: [],
-    items: {
-      type: 'object',
-      properties: {
-        id: { type: 'string' },
-        name: { type: 'string' },
-        images: { type: 'array', items: { type: 'string' } },
-        intervalSec: { type: 'number' },
-        restSec: { type: 'number' },
-        createdAt: { type: 'string' },
-      },
-      required: ['id', 'name', 'images', 'intervalSec', 'restSec', 'createdAt'],
-    },
-  },
-};
-
-// electron-storeのインスタンス化
-// 明示的に型引数としてStoreSchemaを渡すことで、型推論を助けます
-const store = new Store<StoreSchema>({ schema });
-
-// --- コンポーザブル関数 ---
+// HistoryItemの代わりにSessionHistoryをインポート
+import type { SessionHistory } from '../types/history';
 
 export function useHistory() {
-  // --- 状態 ---
-  // ストアから読み込んだ履歴データをリアクティブなrefとして保持
-  // getメソッドにキーを渡し、型アサーションで明示的に型を伝える
-  const histories = ref<HistoryItem[]>((store.get('histories') as HistoryItem[]) ?? []);
+  // 型をSessionHistoryに統一する
+  const histories = ref<SessionHistory[]>([]);
 
-  // --- メソッド ---
-
-  /**
-   * 新しい履歴を保存する
-   * @param sessionData 保存するセッションの情報
-   */
-  const saveHistory = (sessionData: Omit<HistoryItem, 'id' | 'createdAt'>) => {
-    const newHistory: HistoryItem = {
+  const saveHistory = async (sessionData: Omit<SessionHistory, 'id' | 'createdAt' | 'name'>) => {
+    const newHistory: SessionHistory = {
       ...sessionData,
-      id: `session-${Date.now()}`, // 簡単な一意ID
+      id: `session-${Date.now()}`,
+      name: `セッション ${new Date().toLocaleString()}`,
       createdAt: new Date().toISOString(),
+      // readonlyプロパティに適合させるため、ここで配列をコピーする
+      images: [...sessionData.images],
+      thumbnails: [...sessionData.thumbnails],
     };
 
-    // getメソッドにキーを渡し、型アサーションで明示的に型を伝える
-    const currentHistories = (store.get('histories') as HistoryItem[]) ?? [];
-    const updatedHistories = [...currentHistories, newHistory];
-
-    // setメソッドにキーと値を渡す
-    store.set('histories', updatedHistories);
-    histories.value = updatedHistories; // ローカルのrefも更新
+    if (window.electronAPI) {
+      console.log('useHistory.ts: saveHistory function entered. Calling electronAPI.saveHistory');
+      // newHistoryはSessionHistory型なので、そのまま渡せる
+      await window.electronAPI.saveHistory(newHistory);
+      await loadHistories();
+      console.log('useHistory.ts: electronAPI.saveHistory completed.');
+    } else {
+      console.warn('useHistory.ts: electronAPI is not available. History will not be saved.');
+    }
   };
 
-  /**
-   * 指定したIDの履歴を削除する
-   * @param historyId 削除する履歴のID
-   */
-  const deleteHistory = (historyId: string) => {
-    // getメソッドにキーを渡し、型アサーションで明示的に型を伝える
-    const currentHistories = (store.get('histories') as HistoryItem[]) ?? [];
-    const updatedHistories = currentHistories.filter((h) => h.id !== historyId);
-
-    // setメソッドにキーと値を渡す
-    store.set('histories', updatedHistories);
-    histories.value = updatedHistories; // ローカルのrefも更新
+  const loadHistories = async () => {
+    if (window.electronAPI) {
+      // 返り値も代入先もSessionHistory[]なので問題なく代入できる
+      histories.value = await window.electronAPI.loadHistory();
+    } else {
+      console.warn('electronAPI is not available. Histories cannot be loaded.');
+    }
   };
 
-  /**
-   * 指定したIDの履歴の名前を更新する
-   * @param historyId 更新する履歴のID
-   * @param newName 新しい名前
-   */
-  const updateHistoryName = (historyId: string, newName: string) => {
-    // getメソッドにキーを渡し、型アサーションで明示的に型を伝える
-    const currentHistories = (store.get('histories') as HistoryItem[]) ?? [];
-    const updatedHistories = currentHistories.map((h) =>
-      h.id === historyId ? { ...h, name: newName } : h
-    );
-
-    // setメソッドにキーと値を渡す
-    store.set('histories', updatedHistories);
-    histories.value = updatedHistories; // ローカルのrefも更新
+  const deleteHistory = async (historyId: string) => {
+    if (window.electronAPI) {
+      await window.electronAPI.deleteHistory(historyId);
+      await loadHistories();
+    } else {
+      console.warn('electronAPI is not available. History cannot be deleted.');
+    }
   };
 
-  // コンポーネント側には読み取り専用の履歴データと操作関数を公開
+  const updateHistoryName = async (historyId: string, newName: string) => {
+    if (window.electronAPI) {
+      await window.electronAPI.updateHistoryName(historyId, newName);
+      await loadHistories();
+    } else {
+      console.warn('electronAPI is not available. History name cannot be updated.');
+    }
+  };
+
   return {
     histories: readonly(histories),
     saveHistory,
+    loadHistories,
     deleteHistory,
     updateHistoryName,
   };

@@ -1,13 +1,13 @@
-// vite.config.ts
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import { resolve } from 'path'
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [vue()],
-  base: './', // ★Electronでファイルを読み込むために相対パスを指定
+  base: './',
   build: {
     outDir: 'dist', // ビルド出力ディレクトリ
+    sourcemap: true,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'), // index.htmlをエントリーポイントとして指定
@@ -24,4 +24,4 @@ export default defineConfig({
         ? JSON.stringify(`http://localhost:${process.env.VITE_PORT || 5173}`)
         : 'undefined',
   },
-})
+});

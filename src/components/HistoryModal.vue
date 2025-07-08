@@ -19,8 +19,8 @@
                                 history.restSec }}秒</div>
                             <div class="timestamp">実施日時: {{ new Date(history.createdAt).toLocaleString() }}</div>
                             <div class="thumbs">
-                                <img v-for="(thumb, index) in history.thumbnails.slice(0.4)"
-                                    :key="`${history.id}-${index}`" :src="thumb">
+                                <img v-for="(thumb, index) in history.thumbnails.slice(0, 4)"
+                                    :key="`${history.id}-${index}`" :src="`app-file://${thumb}`">
                             </div>
                         </div>
                         <div class="actions">
@@ -81,7 +81,7 @@
 import type { SessionHistory } from "../types/history";
 defineProps<{
     isHistoriesVisible: boolean;
-    histories: SessionHistory[];
+    histories: readonly SessionHistory[];
 }>();
 
 const emit = defineEmits<{
