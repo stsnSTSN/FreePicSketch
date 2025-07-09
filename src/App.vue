@@ -20,9 +20,10 @@ const {
   loadImages,
   toggleSlideshow,
   endSession,
+  loadImagesFromPaths
 } = useSlideshow();
 
-const { histories, saveHistory, loadHistories } = useHistory(); // loadHistories を追加
+const { histories, saveHistory, loadHistories, deleteHistory } = useHistory(); // loadHistories を追加
 
 const isControlsVisible = ref(true);
 const isHistoriesVisible = ref(false);
@@ -36,6 +37,11 @@ const toggleHistoriesPanel = () => {
   isHistoriesVisible.value = !isHistoriesVisible.value;
 }
 
+const applyHistory = (paths: string[]) => {
+  loadImagesFromPaths(paths);
+  isHistoriesVisible.value = false;
+}
+
 watch(isPlaying, (newIsPlaying) => {
   isControlsVisible.value = !newIsPlaying;
 }, { immediate: true });
@@ -43,18 +49,22 @@ watch(isPlaying, (newIsPlaying) => {
 watch(isSessionFinished, async (finished) => {
   console.log('App.vue Watcher: isSessionFinished changed to:', finished);
   if (finished) {
-    // サムネイルとして、最初の4枚の画像のパスを取得します。
-    const thumbnailPaths = images.value
-      .slice(0, 4)
-      .map(file => (file as any).path || file.name);
 
     try {
       console.log('App.vue: Saving history with thumbnail paths.');
+      // 履歴に保存する画像のパスを生成する
+      const imagePaths = images.value.map(fileOrPath => {
+        if (fileOrPath instanceof File) {
+          // Electron環境でFileオブジェクトからフルパスを取得
+          return (fileOrPath as any).path;
+        }
+        return fileOrPath;
+      });
 
       const newHistoryData = {
-        images: images.value.map(file => (file as any).path || file.name),
+        images: imagePaths, // 生成したパスの配列を保存
         imageCount: images.value.length,
-        thumbnails: thumbnailPaths, // base64の代わりにパスを保存
+        thumbnails: imagePaths.slice(0, 4),
         intervalSec: intervalSec.value,
         restSec: restSec.value,
       };
@@ -78,11 +88,12 @@ onMounted(() => {
     <Control :is-controls-visible="isControlsVisible" v-model:interval-sec="intervalSec" v-model:rest-sec="restSec"
       :is-playing="isPlaying" :is-ready="isReady" :is-session-finished="isSessionFinished"
       @toggle-play="toggleSlideshow" @end-session="endSession" @toggle-history="toggleHistoriesPanel"
-      @files-selected="loadImages" @toggle-visibility="toggleControlsPanel"></Control>
+      @files-selected="loadImages" @toggle-visibility="toggleControlsPanel()"></Control>
 
     <div class="image-display-area">
       <HistoryModal :is-histories-visible="isHistoriesVisible" :histories="histories"
-        @toggle-history="toggleHistoriesPanel"></HistoryModal>
+        @toggle-history="toggleHistoriesPanel" @apply-history="applyHistory" @delete-history="deleteHistory">
+      </HistoryModal>
       <div v-if="isSessionFinished" class="placeholder">
         <p class="session-complete-message">セッション完了！</p>
       </div>
@@ -103,7 +114,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* スタイルは変更なし */
 .croquis-app {
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;

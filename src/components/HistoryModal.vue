@@ -8,7 +8,6 @@
             </div>
             <div class="modal-body">
                 <ul class="history-list">
-                    <!-- 通常表示のアイテム -->
                     <li v-if="!histories || histories.length === 0" class="no-history">
                         <p>まだセッション履歴がありません。レッツクロッキー！</p>
                     </li>
@@ -24,8 +23,9 @@
                             </div>
                         </div>
                         <div class="actions">
-                            <button class="btn-secondary">適用</button>
-                            <button class="btn-danger">削除</button>
+                            <button @click="emit('apply-history', [...history.images])"
+                                class="btn-secondary">適用</button>
+                            <button @click="emit('delete-history', history.id)" class="btn-danger">削除</button>
                         </div>
                     </li>
                     <!-- <li class="history-item">
@@ -86,6 +86,8 @@ defineProps<{
 
 const emit = defineEmits<{
     (e: 'toggle-history'): void;
+    (e: 'apply-history', value: string[]): void;
+    (e: 'delete-history', value: string): void;
 }>();
 </script>
 <style scoped>

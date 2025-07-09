@@ -1,10 +1,7 @@
 import { ref, computed, watch } from 'vue';
-import type { SessionHistory } from '../types/history';
 
 export function useSlideshow() {
-  // NOTE: blob URL(string)ではなく、Fileオブジェクトを直接保持するように変更
-  // これにより、Electron環境でfile.pathプロパティにアクセスできる
-  const images = ref<File[]>([]);
+  const images = ref<(File | string)[]>([]);
   const currentImageIndex = ref(0);
 
   const intervalSec = ref(60);
@@ -19,19 +16,29 @@ export function useSlideshow() {
 
   const isReady = computed(() => images.value.length > 0);
 
-  // NOTE: Fileオブジェクトから動的にblob URLを生成するよう変更
   const currentImage = computed(() => {
     if (!isReady.value || currentImageIndex.value >= images.value.length) {
       return null;
     }
     // 古いURLを解放し、新しいURLを生成
     const currentFile = images.value[currentImageIndex.value];
-    return URL.createObjectURL(currentFile);
+    if (currentFile instanceof File) {
+      return URL.createObjectURL(currentFile);
+    } else if (typeof currentFile === 'string') {
+      return `app-file://${currentFile}`;
+    }
   });
 
   const loadImages = (files: FileList | null) => {
     if (!files) return;
     images.value = Array.from(files);
+    currentImageIndex.value = 0;
+    isSessionFinished.value = false;
+  };
+
+  const loadImagesFromPaths = (paths: string[] | null) => {
+    if (!paths || paths.length === 0) return;
+    images.value = paths;
     currentImageIndex.value = 0;
     isSessionFinished.value = false;
   };
@@ -106,5 +113,6 @@ export function useSlideshow() {
     loadImages,
     toggleSlideshow,
     endSession,
+    loadImagesFromPaths,
   };
 }
