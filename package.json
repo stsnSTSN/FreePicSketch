@@ -1,13 +1,13 @@
 {
-  "name": "croquis-app",
+  "name": "croquisapp",
   "type": "module",
   "version": "1.0.0",
-  "description": "A quick posing tool for croquis.",
+  "description": "手持ちの画像でクロッキーができるアプリ",
   "main": "electron/main.js",
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc && vite build",
+    "build": "vue-tsc --noEmit -p tsconfig.app.json && vite build",
     "preview": "vite preview",
     "electron": "npm run build && electron .",
     "electron:dev": "vite build --mode development && electron .",
@@ -32,7 +32,7 @@
   },
   "build": {
     "appId": "com.yourcompany.croquisapp",
-    "productName": "CroquisApp",
+    "productName": "croquisapp",
     "files": [
       "dist/**/*",
       "electron/**/*"

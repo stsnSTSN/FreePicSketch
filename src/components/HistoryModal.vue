@@ -7,6 +7,9 @@
                 <button class="close-button" @click="emit('toggle-history')" title="閉じる">&times;</button>
             </div>
             <div class="modal-body">
+                <div class="nortification-submodal" :class="{ 'is-active': isSubmodalVisible }">
+                    <p id="submordal-delete">セッションを削除しました</p>
+                </div>
                 <ul class="history-list">
                     <li v-if="!histories || histories.length === 0" class="no-history">
                         <p>まだセッション履歴がありません。レッツクロッキー！</p>
@@ -25,7 +28,7 @@
                         <div class="actions">
                             <button @click="emit('apply-history', [...history.images])"
                                 class="btn-secondary">適用</button>
-                            <button @click="emit('delete-history', history.id)" class="btn-danger">削除</button>
+                            <button @click="handleDelete(history.id)" class="btn-danger">削除</button>
                         </div>
                     </li>
                     <!-- <li class="history-item">
@@ -78,6 +81,7 @@
     </div>
 </template>
 <script setup lang="ts">
+import { ref } from 'vue';
 import type { SessionHistory } from "../types/history";
 defineProps<{
     isHistoriesVisible: boolean;
@@ -89,6 +93,18 @@ const emit = defineEmits<{
     (e: 'apply-history', value: string[]): void;
     (e: 'delete-history', value: string): void;
 }>();
+
+const isSubmodalVisible = ref(false);
+
+const handleDelete = (historyId: string) => {
+    emit('delete-history', historyId);
+    // 削除時にサブモーダルを表示
+    isSubmodalVisible.value = true;
+    setTimeout(() => {
+        isSubmodalVisible.value = false;
+    }, 1000)
+}
+
 </script>
 <style scoped>
 .modal-content {
@@ -272,5 +288,31 @@ button {
     text-align: center;
     color: #666;
     padding: 20px;
+}
+
+.nortification-submodal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: 50px;
+    width: 80%;
+    border: 1px solid #000;
+    background: #FFF;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 800px;
+    padding: 20px;
+    border-radius: 8px;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    visibility: hidden;
+    opacity: 0;
+}
+
+.nortification-submodal.is-active {
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    visibility: visible;
+    opacity: 1;
 }
 </style>
