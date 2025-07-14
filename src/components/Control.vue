@@ -1,5 +1,4 @@
 <template>
-    <!-- コントロールパネル -->
     <div class="controls" :class="{ 'hidden-controls': !isControlsVisible }">
         <div class="controls-toggle" @click="emit('toggle-visibility')">
             <img class="controls-toggle-img" src="../assets/img/menu_toggle.png" alt="コントロールパネルの表示切り替え">
@@ -8,18 +7,56 @@
 
         <div class="input-group">
             <label for="interval-input">表示秒数:</label>
-            <input type="number" id="interval-input" :value="intervalSec"
-                @input="emit('update:intervalSec', Number(($event.target as HTMLInputElement).value))" min="1"
-                class="time-input" />
+            <div class="preset-input-wrapper" ref="intervalWrapper">
+                <input type="number" id="interval-input" class="time-input" :value="intervalSec"
+                    @input="emit('update:intervalSec', Number(($event.target as HTMLInputElement).value))"
+                    placeholder="秒" />
+                <button @click="toggleMenu('interval')" class="preset-toggle-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                        viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                            d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                    </svg>
+                </button>
+                <div v-show="isIntervalMenuOpen" class="preset-menu">
+                    <ul>
+                        <li v-for="preset in timeIntervalPresets" :key="preset">
+                            <button @click="selectPreset('interval', preset)" class="preset-item-button">
+                                {{ preset }}
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
             <span>秒</span>
         </div>
+
         <div class="input-group">
             <label for="rest-input">休憩秒数:</label>
-            <input type="number" id="rest-input" :value="restSec"
-                @input="emit('update:restSec', Number(($event.target as HTMLInputElement).value))" min="0"
-                class="time-input" />
+            <div class="preset-input-wrapper" ref="restWrapper">
+                <input type="number" id="rest-input" class="time-input" :value="restSec"
+                    @input="emit('update:restSec', Number(($event.target as HTMLInputElement).value))" placeholder="秒"
+                    min="0" />
+                <button @click="toggleMenu('rest')" class="preset-toggle-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                        viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                            d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                    </svg>
+                </button>
+                <div v-show="isRestMenuOpen" class="preset-menu">
+                    <ul>
+                        <li v-for="preset in timeRestPresets" :key="preset">
+                            <button @click="selectPreset('rest', preset)" class="preset-item-button">
+                                {{ preset }}
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
             <span>秒</span>
         </div>
+
         <div class="button-group">
             <button @click="emit('toggle-play')" :disabled="!isReady"
                 :class="{ 'start-button': !isPlaying, 'stop-button': isPlaying }">
@@ -35,6 +72,12 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+
+const timeIntervalPresets = [10, 30, 60, 90, 120, 180, 300];
+const timeRestPresets = [5, 10, 20, 30];
+
+
 defineProps<{
     isControlsVisible: boolean;
     intervalSec: number;
@@ -54,11 +97,59 @@ const emit = defineEmits<{
     (e: 'toggle-history'): void;
 }>();
 
+const isIntervalMenuOpen = ref(false);
+const isRestMenuOpen = ref(false);
+
+const intervalWrapper = ref<HTMLElement | null>(null);
+const restWrapper = ref<HTMLElement | null>(null);
+
+// どちらの秒数メニューを開閉するかを判断
+const toggleMenu = (type: 'interval' | 'rest') => {
+    if (type === 'interval') {
+        isIntervalMenuOpen.value = !isIntervalMenuOpen.value;
+        isRestMenuOpen.value = false;
+    } else {
+        isRestMenuOpen.value = !isRestMenuOpen.value;
+        isIntervalMenuOpen.value = false;
+    }
+};
+
+// inputとselect、どちらの値を更新するかを判断してemit
+const selectPreset = (type: 'interval' | 'rest', presetValue: number) => {
+    if (type === 'interval') {
+        emit('update:intervalSec', presetValue);
+        isIntervalMenuOpen.value = false;
+    } else {
+        emit('update:restSec', presetValue);
+        isRestMenuOpen.value = false;
+    }
+};
+
 const onFileSelected = (event: Event) => {
     const input = event.target as HTMLInputElement;
     emit('files-selected', input.files);
 }
+
+// 秒数一覧メニューの外側をクリックしたら閉じる
+const handleClickOutside = (event: MouseEvent) => {
+    if (intervalWrapper.value && !intervalWrapper.value.contains(event.target as Node)) {
+        isIntervalMenuOpen.value = false;
+    }
+    if (restWrapper.value && !restWrapper.value.contains(event.target as Node)) {
+        isRestMenuOpen.value = false;
+    }
+};
+
+onMounted(() => {
+    document.addEventListener('click', handleClickOutside, true);
+});
+
+onBeforeUnmount(() => {
+    document.removeEventListener('click', handleClickOutside, true);
+});
+
 </script>
+
 <style scoped>
 .controls {
     z-index: 10;
@@ -132,14 +223,78 @@ const onFileSelected = (event: Event) => {
     font-weight: bold;
 }
 
+.preset-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
 .time-input {
     width: 60px;
     padding: 8px 12px;
     border: 1px solid #c0d9eb;
-    border-radius: 5px;
+    border-radius: 5px 0 0 5px;
+    border-right: 0px;
     text-align: center;
     font-size: 1em;
     color: #2c3e50;
+    -moz-appearance: textfield;
+}
+
+.time-input::-webkit-inner-spin-button,
+.time-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.preset-toggle-button {
+    padding: 8.5px;
+    border: 1px solid #c0d9eb;
+    border-left: none;
+    border-radius: 0 5px 5px 0;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #495057;
+}
+
+.preset-toggle-button:hover {
+    background-color: #e9ecef;
+}
+
+.preset-menu {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    z-index: 20;
+    margin-top: 4px;
+    width: 100%;
+    background: white;
+    border: 1px solid #c0d9eb;
+    border-radius: 5px;
+    box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.05);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.preset-menu ul {
+    list-style: none;
+    padding-left: unset;
+}
+
+.preset-item-button {
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.preset-item-button:hover {
+    background-color: #e9f5ff;
 }
 
 button {

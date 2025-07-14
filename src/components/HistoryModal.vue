@@ -41,36 +41,6 @@
                             <button @click="handleDelete(history.id)" class="btn-danger">削除</button>
                         </div>
                     </li>
-                    <!-- 名称を編集中 のアイテム -->
-                    <li class="history-item editing">
-                        <div class="info">
-                            <!-- 表示モード用の名前 (編集中は非表示) -->
-                            <div class="name" title="クリックして編集">風景スケッチ（短時間）</div>
-                            <!-- 編集モード用の入力欄 (編集中に表示) -->
-                            <div class="edit-name">
-                                <input type="text" value="風景スケッチ（短時間）" />
-                                <div class="edit-actions">
-                                    <button class="btn-primary btn-sm">保存</button>
-                                    <button class="btn-secondary btn-sm">キャンセル</button>
-                                </div>
-                            </div>
-                            <div class="details">32枚 / 10秒 / 休憩0秒</div>
-                            <div class="timestamp">実施日時: 2024/05/16 09:15:10</div>
-                        </div>
-                        <!-- 編集中は適用/削除ボタンを非表示にする -->
-                        <div class="actions"></div>
-                    </li>
-                    <li class="history-item">
-                        <div class="info">
-                            <div class="name" title="クリックして編集">セッション 2024/05/15 21:45</div>
-                            <div class="details">8枚 / 120秒 / 休憩30秒</div>
-                            <div class="timestamp">実施日時: 2024/05/15 21:45:02</div>
-                        </div>
-                        <div class="actions">
-                            <button class="btn-secondary">適用</button>
-                            <button class="btn-danger">削除</button>
-                        </div>
-                    </li>
                 </ul>
             </div>
         </div>
