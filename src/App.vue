@@ -23,7 +23,7 @@ const {
   loadImagesFromPaths
 } = useSlideshow();
 
-const { histories, saveHistory, loadHistories, deleteHistory } = useHistory(); // loadHistories を追加
+const { histories, saveHistory, loadHistories, deleteHistory, updateHistoryName } = useHistory(); // loadHistories を追加
 
 const isControlsVisible = ref(true);
 const isHistoriesVisible = ref(false);
@@ -64,7 +64,7 @@ watch(isSessionFinished, async (finished) => {
       const newHistoryData = {
         images: imagePaths, // 生成したパスの配列を保存
         imageCount: images.value.length,
-        thumbnails: imagePaths.slice(0, 4),
+        thumbnails: imagePaths,
         intervalSec: intervalSec.value,
         restSec: restSec.value,
       };
@@ -92,7 +92,8 @@ onMounted(() => {
 
     <div class="image-display-area">
       <HistoryModal :is-histories-visible="isHistoriesVisible" :histories="histories"
-        @toggle-history="toggleHistoriesPanel" @apply-history="applyHistory" @delete-history="deleteHistory">
+        @toggle-history="toggleHistoriesPanel" @apply-history="applyHistory" @delete-history="deleteHistory"
+        @update-name="updateHistoryName">
       </HistoryModal>
       <div v-if="isSessionFinished" class="placeholder">
         <p class="session-complete-message">セッション完了！</p>

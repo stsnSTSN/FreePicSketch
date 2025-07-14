@@ -12,8 +12,8 @@
     "src/preload/**/*.ts",
     "src/preload.d.ts",
     "src/shared/**/*.ts",
-    "src/**/*",
-    "src/**/*.vue",
+    // "src/**/*",
+    // "src/**/*.vue",
     "env.d.ts"
   ],
   "exclude": ["src/**/__tests__/*"],

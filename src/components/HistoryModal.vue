@@ -14,9 +14,19 @@
                     <li v-if="!histories || histories.length === 0" class="no-history">
                         <p>まだセッション履歴がありません。レッツクロッキー！</p>
                     </li>
-                    <li v-for="history in histories" :key="history.id" class="history-item">
+                    <li v-for="history in histories" :key="history.id" class="history-item"
+                        :class="{ 'editing': editingHistoryId === history.id }">
                         <div class="info">
-                            <div class="name" title="クリックして編集">{{ history.name }}</div>
+                            <div class="name" title="クリックして編集" @click="startEditing(history)">{{ history.name }}</div>
+                            <!-- 編集モード用の入力欄 (編集中に表示) -->
+                            <div class="edit-name">
+                                <input type="text" v-model="editingName" @keyup.enter="saveEdit"
+                                    @keyup.esc="cancelEdit" />
+                                <div class="edit-actions">
+                                    <button @click="saveEdit" class="btn-primary btn-sm">保存</button>
+                                    <button @click="cancelEdit" class="btn-secondary btn-sm">キャンセル</button>
+                                </div>
+                            </div>
                             <div class="details">{{ history.imageCount }}枚 / {{ history.intervalSec }}秒 / 休憩{{
                                 history.restSec }}秒</div>
                             <div class="timestamp">実施日時: {{ new Date(history.createdAt).toLocaleString() }}</div>
@@ -31,20 +41,6 @@
                             <button @click="handleDelete(history.id)" class="btn-danger">削除</button>
                         </div>
                     </li>
-                    <!-- <li class="history-item">
-                        <div class="info">
-                            <div class="name" title="クリックして編集">人物クロッキーセット1</div>
-                            <div class="details">15枚 / 60秒 / 休憩10秒</div>
-                            <div class="timestamp">実施日時: 2024/05/17 14:20:35</div>
-                            <div class="thumbs">
-                                <img src="../assets/img/thumb_prototype_01.jpg" alt="">
-                            </div>
-                        </div>
-                        <div class="actions">
-                            <button class="btn-secondary">適用</button>
-                            <button class="btn-danger">削除</button>
-                        </div>
-                    </li> -->
                     <!-- 名称を編集中 のアイテム -->
                     <li class="history-item editing">
                         <div class="info">
@@ -92,9 +88,12 @@ const emit = defineEmits<{
     (e: 'toggle-history'): void;
     (e: 'apply-history', value: string[]): void;
     (e: 'delete-history', value: string): void;
+    (e: 'update-name', id: string, newName: string): void;
 }>();
 
 const isSubmodalVisible = ref(false);
+const editingHistoryId = ref<string | null>(null);
+const editingName = ref('');
 
 const handleDelete = (historyId: string) => {
     emit('delete-history', historyId);
@@ -103,6 +102,22 @@ const handleDelete = (historyId: string) => {
     setTimeout(() => {
         isSubmodalVisible.value = false;
     }, 1000)
+}
+
+const startEditing = (history: SessionHistory) => {
+    editingHistoryId.value = history.id;
+    editingName.value = history.name;
+}
+
+const saveEdit = () => {
+    if (editingHistoryId.value) {
+        emit('update-name', editingHistoryId.value, editingName.value);
+    }
+    editingHistoryId.value = null;
+}
+
+const cancelEdit = () => {
+    editingHistoryId.value = null;
 }
 
 </script>

@@ -27,6 +27,7 @@
   "dependencies": {
     "electron-store": "^10.1.0",
     "pinia": "^3.0.3",
+    "swiper": "^11.2.10",
     "vue": "^3.4.21",
     "vue-router": "^4.5.1"
   },

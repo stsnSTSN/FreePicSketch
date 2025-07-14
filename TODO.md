@@ -23,13 +23,14 @@
 
 [X] `package.json` の Electron 起動スクリプト設定　（vuejs としての作業がひと段落したら）
 
-- [ ] main.js と preload.js の Electron 機能の統合
-- [ ] package.json の Electron 起動スクリプト設定
+- [x] main.js と preload.js の Electron 機能の統合
+- [x] package.json の Electron 起動スクリプト設定
 - [ ] `vite.config.ts` で Electron ビルドの準備
 - [ ] アプリを閉じた後も表示・休憩秒数の引継ぎ
-- [ ] セッション履歴機能　一覧表示、再表示、
-- [ ] 各画像を表示した秒数を覚えておきたい
+- [x] セッション履歴機能　一覧表示、再表示、
+- [x] 各画像を表示した秒数を覚えておきたい
 - [ ] 細かい設定画面を増やしたい(controls を自動で隠すかどうか、)
 - [ ]controls は画面内の好きなところに設置できると良いかも？
-- [ ]履歴一覧の機能を付ける
+- [X]履歴一覧の機能を付ける
 - [ ]画面左側か右側にアラインしてウィンドウを配置したい
+- [ ]
