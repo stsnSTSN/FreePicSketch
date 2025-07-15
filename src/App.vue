@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed, nextTick } from 'vue';
-import type { SessionHistory } from './types/history';
 import Control from './components/Control.vue';
 import HistoryModal from './components/HistoryModal.vue';
 import { useSlideshow } from './composables/useSlideshow';
@@ -77,6 +76,16 @@ const isProgressBarVisible = computed(() => {
   return isDuringImage || isPausedDuringImage;
 });
 
+// セッション中かどうかを判定
+const isSessionActive = computed(() => {
+  //タイマーが動作中かどうか
+  const isTimerRunning = isPlaying.value;
+
+  // セッションが完了していないか、一時停止中か
+  const isPausedMidSession = !isPlaying.value && !isSessionFinished.value && secondsLeft.value > 0;
+
+  return isTimerRunning || isPausedMidSession;
+});
 
 watch(isSessionFinished, async (finished) => {
   console.log('App.vue Watcher: isSessionFinished changed to:', finished);
@@ -121,8 +130,9 @@ onMounted(() => {
   <div class="croquis-app">
     <Control :is-controls-visible="isControlsVisible" v-model:interval-sec="intervalSec" v-model:rest-sec="restSec"
       :is-playing="isPlaying" :is-ready="isReady" :is-session-finished="isSessionFinished"
-      @toggle-play="toggleSlideshow" @end-session="endSession" @toggle-history="toggleHistoriesPanel"
-      @files-selected="loadImages" @toggle-visibility="toggleControlsPanel()"></Control>
+      :is-session-active="isSessionActive" @toggle-play="toggleSlideshow" @end-session="endSession"
+      @toggle-history="toggleHistoriesPanel" @files-selected="loadImages" @toggle-visibility="toggleControlsPanel()">
+    </Control>
 
     <div class="image-display-area">
       <HistoryModal :is-histories-visible="isHistoriesVisible" :histories="histories"

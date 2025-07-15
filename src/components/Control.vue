@@ -3,15 +3,17 @@
         <div class="controls-toggle" @click="emit('toggle-visibility')">
             <img class="controls-toggle-img" src="../assets/img/menu_toggle.png" alt="コントロールパネルの表示切り替え">
         </div>
-        <input type="file" multiple accept="image/*" @change="onFileSelected" class="file-input" />
+        <input type="file" multiple accept="image/*" @change="onFileSelected" class="file-input"
+            :disabled="isSessionActive" />
 
         <div class="input-group">
             <label for="interval-input">表示秒数:</label>
             <div class="preset-input-wrapper" ref="intervalWrapper">
                 <input type="number" id="interval-input" class="time-input" :value="intervalSec"
+                    :disabled="isSessionActive"
                     @input="emit('update:intervalSec', Number(($event.target as HTMLInputElement).value))"
                     placeholder="秒" />
-                <button @click="toggleMenu('interval')" class="preset-toggle-button">
+                <button @click="toggleMenu('interval')" class="preset-toggle-button" :disabled="isSessionActive">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                         viewBox="0 0 16 16">
                         <path fill-rule="evenodd"
@@ -34,10 +36,10 @@
         <div class="input-group">
             <label for="rest-input">休憩秒数:</label>
             <div class="preset-input-wrapper" ref="restWrapper">
-                <input type="number" id="rest-input" class="time-input" :value="restSec"
+                <input type="number" id="rest-input" class="time-input" :value="restSec" :disabled="isSessionActive"
                     @input="emit('update:restSec', Number(($event.target as HTMLInputElement).value))" placeholder="秒"
                     min="0" />
-                <button @click="toggleMenu('rest')" class="preset-toggle-button">
+                <button @click="toggleMenu('rest')" class="preset-toggle-button" :disabled="isSessionActive">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                         viewBox="0 0 16 16">
                         <path fill-rule="evenodd"
@@ -58,15 +60,14 @@
         </div>
 
         <div class="button-group">
-            <button @click="emit('toggle-play')" :disabled="!isReady"
-                :class="{ 'start-button': !isPlaying, 'stop-button': isPlaying }">
+            <button @click="emit('toggle-play')" :class="{ 'start-button': !isPlaying, 'stop-button': isPlaying }">
                 <img v-if="!isPlaying" src="../assets/img/play-solid.svg" alt="開始">
                 <img v-else src="../assets/img/pause-solid.svg" alt="一時停止">
             </button>
-            <button @click="emit('end-session')" :disabled="!isReady" class="end-session-button">
+            <button @click="emit('end-session')" class="end-session-button">
                 セッション終了
             </button>
-            <button class="btn-history" @click="emit('toggle-history')">履歴</button>
+            <button class="btn-history" @click="emit('toggle-history')" :disabled="isSessionActive">履歴</button>
         </div>
     </div>
 </template>
@@ -85,6 +86,7 @@ defineProps<{
     isPlaying: boolean;
     isReady: boolean;
     isSessionFinished: boolean;
+    isSessionActive: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -208,6 +210,12 @@ onBeforeUnmount(() => {
     cursor: pointer;
 }
 
+.file-input:disabled {
+    cursor: not-allowed;
+    background-color: #e9ecef;
+    color: #6c757d;
+}
+
 .input-group {
     display: flex;
     align-items: center;
@@ -261,6 +269,13 @@ onBeforeUnmount(() => {
 
 .preset-toggle-button:hover {
     background-color: #e9ecef;
+}
+
+.time-input:disabled,
+.preset-toggle-button:disabled {
+    cursor: not-allowed;
+    background-color: #e9ecef;
+    color: #6c757d;
 }
 
 .preset-menu {
@@ -358,5 +373,9 @@ button img {
     background-color: #b0bec5;
     cursor: not-allowed;
     box-shadow: none;
+}
+
+.btn-history:disabled {
+    cursor: not-allowed;
 }
 </style>
