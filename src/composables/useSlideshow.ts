@@ -83,18 +83,33 @@ export function useSlideshow() {
   const endSession = async () => {
     if (timerId) clearInterval(timerId);
     isPlaying.value = false;
-    isSessionFinished.value = true; // 状態の変更のみ行う
-    console.log('useSlideshow.ts: Session ended. isSessionFinished set to true.');
+    isSessionFinished.value = true;
   };
 
   watch(isPlaying, (playing) => {
     if (playing) {
+      // もしセッションが完了済みなら、最初の画像からリスタート
       if (isSessionFinished.value) {
         currentImageIndex.value = 0;
+        isSessionFinished.value = false;
+        startTimer(intervalSec.value, nextWithRest);
+        return;
       }
-      isSessionFinished.value = false;
-      startTimer(intervalSec.value, nextWithRest);
+
+      // 休憩中なら残り秒数、初回スタート時なら指定の表示秒数
+      const duration = secondsLeft.value > 0 ? secondsLeft.value : intervalSec.value;
+
+      const onCompleteCallback = isResting.value
+        ? () => {
+            // 休憩タイマーが完了した場合
+            isResting.value = false;
+            next();
+          }
+        : nextWithRest; // 画像表示タイマーが完了した場合
+
+      startTimer(duration, onCompleteCallback);
     } else {
+      // 一時停止時の処理
       if (timerId) clearInterval(timerId);
     }
   });
