@@ -11,17 +11,22 @@
     "preview": "vite preview",
     "electron": "npm run build && electron .",
     "electron:dev": "vite build --mode development && electron .",
-    "electron:build": "npm run build && electron-builder"
+    "electron:build": "npm run build && electron-builder",
+    "test": "vitest",
+    "test:ui": "vitest --ui"
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.2",
     "@types/node": "^20.14.9",
     "@vitejs/plugin-vue": "^5.0.4",
+    "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.7.0",
     "electron": "^30.0.8",
     "electron-builder": "^24.13.3",
+    "jsdom": "^26.1.0",
     "typescript": "^5.2.2",
     "vite": "^5.2.0",
+    "vitest": "^3.2.4",
     "vue-tsc": "^2.0.6"
   },
   "dependencies": {

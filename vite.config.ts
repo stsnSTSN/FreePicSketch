@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { resolve } from 'path';
@@ -23,5 +24,9 @@ export default defineConfig({
       process.env.NODE_ENV === 'development'
         ? JSON.stringify(`http://localhost:${process.env.VITE_PORT || 5173}`)
         : 'undefined',
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
   },
 });
