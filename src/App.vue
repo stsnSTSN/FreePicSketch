@@ -28,7 +28,6 @@ const { histories, saveHistory, loadHistories, deleteHistory, updateHistoryName 
 const isControlsVisible = ref(true);
 const isHistoriesVisible = ref(false);
 
-const progressBarRef = ref<HTMLElement | null>(null);
 
 // controlsの表示切り替え（手動トグルボタン用）
 const toggleControlsPanel = () => {
@@ -46,6 +45,7 @@ const applyHistory = (paths: string[]) => {
 
 const progressBarColorClass = computed(() => {
   const percentageLeft = (secondsLeft.value / intervalSec.value) * 100;
+
   if (percentageLeft <= 10) {
     return 'progress-bar-red'
   }
@@ -55,16 +55,28 @@ const progressBarColorClass = computed(() => {
   return 'progress-bar-green'
 })
 
-const restartProgressBarAnimation = () => {
-  if (progressBarRef.value) {
-    const bar = progressBarRef.value;
-    // アニメーションをリセットして再開
-    bar.classList.remove('is-animating');
-    void bar.offsetWidth;
-    bar.style.animationDuration = `${intervalSec.value}s`;
-    bar.classList.add('is-animating');
-  }
-}
+const progressBarStyle = computed(() => {
+  // バーの長さを計算
+  const percentage = (secondsLeft.value / intervalSec.value) * 100;
+  return {
+    width: `${percentage}%`
+  };
+});
+
+const isProgressBarVisible = computed(() => {
+  // 画像が表示されている間
+  const isDuringImage = isPlaying.value && !isResting.value;
+
+  // 一時停止ボタンを押して止まった状態
+  const isPausedDuringImage =
+    !isPlaying.value &&
+    !isResting.value &&
+    secondsLeft.value > 0 &&
+    !isSessionFinished.value;
+
+  return isDuringImage || isPausedDuringImage;
+});
+
 
 watch(isSessionFinished, async (finished) => {
   console.log('App.vue Watcher: isSessionFinished changed to:', finished);
@@ -96,21 +108,7 @@ watch(isSessionFinished, async (finished) => {
   }
 });
 
-watch(isPlaying, async (playing) => {
-  isControlsVisible.value = !playing;
 
-  if (playing) {
-    await nextTick(); //DOMの更新を待たないと、プログレスバーの要素を触れない
-    restartProgressBarAnimation();
-  }
-}, { immediate: true });
-
-watch(currentImageIndex, async () => {
-  if (!isResting.value) {
-    await nextTick();
-    restartProgressBarAnimation();
-  }
-})
 
 // アプリケーションがマウントされたときに履歴をロード
 onMounted(() => {
@@ -131,9 +129,9 @@ onMounted(() => {
         @toggle-history="toggleHistoriesPanel" @apply-history="applyHistory" @delete-history="deleteHistory"
         @update-name="updateHistoryName">
       </HistoryModal>
-      <div class="progress-container" v-if="isPlaying || !isSessionFinished">
-        <div class="progress-bar" ref="progressBarRef">
-          <div class="progress-bar-fill" :class="progressBarColorClass"></div>
+      <div class="progress-container" v-if="isProgressBarVisible">
+        <div class="progress-bar">
+          <div class="progress-bar-fill" :class="progressBarColorClass" :style="progressBarStyle"></div>
         </div>
       </div>
 
@@ -270,17 +268,24 @@ h1 {
   left: 15px;
 }
 
-.progress-bar {
-  height: 100%;
+.progress-container {
   position: absolute;
   top: 0;
-  height: 10px;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  z-index: 10;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 100%;
+  background-color: #e9ecef;
 }
 
 .progress-bar-fill {
-  width: 100%;
   height: 100%;
-  transition: background-color 0.5s ease;
+  transition: width 1s linear, background-color 0.5s ease;
 }
 
 .progress-bar-green {
@@ -293,21 +298,5 @@ h1 {
 
 .progress-bar-red {
   background-color: #dc3545;
-}
-
-@keyframes shrink-animation {
-  from {
-    width: 100%;
-  }
-
-  to {
-    width: 0%;
-  }
-}
-
-.is-animating {
-  animation-name: shrink-animation;
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
 }
 </style>
