@@ -1,6 +1,6 @@
-# 60-Second Drawing App
+# FreePicSketch
 
-「60-Second Drawing App」は、アーティストがクロッキーや模写の練習を効率的に行うためのデスクトップアプリケーションです。指定した時間内に選択した画像をスライドショー形式で表示し、集中して描画に取り組むことをサポートします。特に、ローカル PC 上の画像を直接参照できる点が大きな特徴です。
+「FreePicSketch」は、クロッキーや模写の練習を効率的に行うためのデスクトップアプリケーションです。指定した時間内に選択した画像をスライドショー形式で表示し、集中して描画に取り組むことをサポートします。特に、ローカル PC 上の画像を直接参照できる点が大きな特徴です。
 
 ## 主な機能
 
@@ -28,7 +28,7 @@
 
 ## ダウンロード
 
-最新のリリース版は、[GitHub のリリース](https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME/releases)ページからダウンロードできます。
+最新のリリース版は、[GitHub のリリース](https://github.com/stsnSTSN/FreePicSketch/releases/)ページからダウンロードできます。
 
 Windows ユーザーは、`FreePic Sketch Setup X.X.X.exe` をダウンロードしてインストールしてください。
 (Mac に関しては今の所開発の視野に入れていません…)
