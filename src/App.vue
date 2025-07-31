@@ -5,6 +5,11 @@ import HistoryModal from './components/HistoryModal.vue';
 import { useSlideshow } from './composables/useSlideshow';
 import { useHistory } from './composables/useHistory';
 
+const isControlsVisible = ref(true);
+const isHistoriesVisible = ref(false);
+const isRandom = ref(false);
+const imageCount = ref(0);
+
 const {
   images,
   currentImageIndex,
@@ -20,15 +25,11 @@ const {
   toggleSlideshow,
   endSession,
   loadImagesFromPaths
-} = useSlideshow();
+} = useSlideshow(isRandom, imageCount);
 
 const { histories, saveHistory, loadHistories, deleteHistory, updateHistoryName } = useHistory(); // loadHistories を追加
 
-const isControlsVisible = ref(true);
-const isHistoriesVisible = ref(false);
-
-
-// controlsの表示切り替え（手動トグルボタン用）
+// controlsの表示切り替え
 const toggleControlsPanel = () => {
   isControlsVisible.value = !isControlsVisible.value;
 }
@@ -36,6 +37,11 @@ const toggleControlsPanel = () => {
 const toggleHistoriesPanel = () => {
   isHistoriesVisible.value = !isHistoriesVisible.value;
 }
+
+// ランダム切り替え
+const toggleRandom = () => {
+  isRandom.value = !isRandom.value;
+};
 
 const applyHistory = (paths: string[]) => {
   loadImagesFromPaths(paths);
@@ -129,9 +135,10 @@ onMounted(() => {
 <template>
   <div class="croquis-app">
     <Control :is-controls-visible="isControlsVisible" v-model:interval-sec="intervalSec" v-model:rest-sec="restSec"
-      :is-playing="isPlaying" :is-ready="isReady" :is-session-finished="isSessionFinished"
-      :is-session-active="isSessionActive" @toggle-play="toggleSlideshow" @end-session="endSession"
-      @toggle-history="toggleHistoriesPanel" @files-selected="loadImages" @toggle-visibility="toggleControlsPanel()">
+      v-model:image-count="imageCount" :is-playing="isPlaying" :is-ready="isReady"
+      :is-session-finished="isSessionFinished" :is-session-active="isSessionActive" :is-random="isRandom"
+      @toggle-play="toggleSlideshow" @end-session="endSession" @toggle-history="toggleHistoriesPanel"
+      @files-selected="loadImages" @toggle-visibility="toggleControlsPanel()" @toggle-random="toggleRandom">
     </Control>
 
     <div class="image-display-area">

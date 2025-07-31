@@ -5,8 +5,27 @@
         </div>
         <input type="file" multiple accept="image/*" @change="onFileSelected" class="file-input"
             :disabled="isSessionActive" />
+        <div class="input-group">
+            <label for="interval-input">ランダム再生:</label>
+            <button @click="emit('toggle-random')" class="toggle-random-button">
+                <svg v-if="isRandom" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" fill="#2563eb"
+                    id="svg_random_on">
+                    <path
+                        d="M192 64C86 64 0 150 0 256S86 448 192 448l192 0c106 0 192-86 192-192s-86-192-192-192L192 64zm192 96a96 96 0 1 1 0 192 96 96 0 1 1 0-192z" />
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" fill="#6b7280" id="svg_random_off">
+                    <path
+                        d="M384 128c70.7 0 128 57.3 128 128s-57.3 128-128 128l-192 0c-70.7 0-128-57.3-128-128s57.3-128 128-128l192 0zM576 256c0-106-86-192-192-192L192 64C86 64 0 150 0 256S86 448 192 448l192 0c106 0 192-86 192-192zM192 352a96 96 0 1 0 0-192 96 96 0 1 0 0 192z" />
+                </svg>
+            </button>
+        </div>
 
         <div class="input-group">
+            <label for="image-count-input">実施枚数:</label>
+            <input type="number" id="image-count-input" class="time-input" :value="imageCount"
+                @input="emit('update:imageCount', Number(($event.target as HTMLInputElement).value))" min="0"
+                :disabled="isSessionActive" placeholder="全て">
+            <span>枚</span>
             <label for="interval-input">表示秒数:</label>
             <div class="preset-input-wrapper" ref="intervalWrapper">
                 <input type="number" id="interval-input" class="time-input" :value="intervalSec"
@@ -87,6 +106,8 @@ defineProps<{
     isReady: boolean;
     isSessionFinished: boolean;
     isSessionActive: boolean;
+    isRandom: boolean;
+    imageCount: number;
 }>();
 
 const emit = defineEmits<{
@@ -97,6 +118,8 @@ const emit = defineEmits<{
     (e: 'files-selected', files: FileList | null): void;
     (e: 'toggle-visibility'): void;
     (e: 'toggle-history'): void;
+    (e: 'toggle-random'): void;
+    (e: 'update:imageCount', value: number): void;
 }>();
 
 const isIntervalMenuOpen = ref(false);
@@ -377,5 +400,23 @@ button img {
 
 .btn-history:disabled {
     cursor: not-allowed;
+}
+
+.toggle-random-button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 35px;
+    box-shadow: unset;
+}
+
+.toggle-random-button svg {
+    width: 100%;
+    height: 100%;
 }
 </style>

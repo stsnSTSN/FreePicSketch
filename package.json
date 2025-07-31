@@ -1,5 +1,5 @@
 {
-  "name": "croquisapp",
+  "name": "freepicsketch",
   "type": "module",
   "version": "1.0.0",
   "description": "手持ちの画像でクロッキーができるアプリ",
@@ -37,8 +37,8 @@
     "vue-router": "^4.5.1"
   },
   "build": {
-    "appId": "com.yourcompany.croquisapp",
-    "productName": "croquisapp",
+    "appId": "com.yourcompany.freepicsketch",
+    "productName": "FreePic Sketch",
     "files": [
       "dist/**/*",
       "electron/**/*"

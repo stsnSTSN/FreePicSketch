@@ -1,45 +1,50 @@
-# drawing-app-vue
+# 60-Second Drawing App
 
-This template should help get you started developing with Vue 3 in Vite.
+「60-Second Drawing App」は、アーティストがクロッキーや模写の練習を効率的に行うためのデスクトップアプリケーションです。指定した時間内に選択した画像をスライドショー形式で表示し、集中して描画に取り組むことをサポートします。特に、ローカル PC 上の画像を直接参照できる点が大きな特徴です。
 
-## Recommended IDE Setup
+## 主な機能
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- **画像スライドショー**: 選択した画像を、設定した表示時間で自動的に切り替えて表示します。
+- **ローカル画像参照**: PC 内の任意のフォルダから画像を選択し、アプリケーションに読み込むことができます。
+- **セッション履歴**: 過去のスライドショーセッションの履歴を自動的に保存します。履歴は一覧で表示され、セッション名や表示された画像、各画像の表示時間を確認できます。
+- **履歴からの再開**: 保存されたセッション履歴から、過去に表示した画像を再度読み込み、同じ設定でスライドショーを再開できます。
+- **履歴の編集**: 保存されたセッションの名称を編集できます。
+- **一時停止・再開**: スライドショーの途中で一時停止し、任意のタイミングで再開できます。
+- **セッション終了**: 任意のタイミングでスライドショーセッションを終了できます。
+- **ランダム表示オプション**: 選択した画像の中から指定枚数をランダムに表示するオプションがあります。
 
-## Type Support for `.vue` Imports in TS
+## 技術スタック
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+このプロジェクトは以下の主要技術を使用して構築されています。
 
-## Customize configuration
+- **フロントエンド**: Vue 3 (Composition API)
+- **ビルドツール**: Vite
+- **言語**: TypeScript
+- **状態管理**: Pinia
+- **ルーティング**: Vue Router
+- **デスクトップアプリ**: Electron
+- **テスト**: Vitest
+- **コード品質**: ESLint, Prettier
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+## ダウンロード
 
-## Project Setup
+最新のリリース版は、[GitHub のリリース](https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME/releases)ページからダウンロードできます。
 
-```sh
-npm install
-```
+Windows ユーザーは、`FreePic Sketch Setup X.X.X.exe` をダウンロードしてインストールしてください。
+(Mac に関しては今の所開発の視野に入れていません…)
 
-### Compile and Hot-Reload for Development
+## アンインストール
 
-```sh
-npm run dev
-```
+Windows の場合:
 
-### Type-Check, Compile and Minify for Production
+1.  「スタート」ボタンを右クリックし、「アプリと機能」または「インストールされているアプリ」を選択します。
+2.  アプリの一覧から「FreePic Sketch」を探します。
+3.  「FreePic Sketch」を選択し、「アンインストール」をクリックします。
 
-```sh
-npm run build
-```
+## 今後の展望
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
-
-```sh
-npm run test:unit
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+- 画像クリップボードコピー機能
+- グリッド線表示機能
+- Controls の配置変更機能
+- ドラッグアンドドロップによる画像追加
+- セッション履歴のスライダー導入
