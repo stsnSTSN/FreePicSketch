@@ -31,3 +31,4 @@ coverage
 docs/gemini_order.txt
 .env
 drawing-app-vue.code-workspace
+TODO.md
